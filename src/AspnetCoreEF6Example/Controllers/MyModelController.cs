@@ -1,18 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Threading.Tasks;
+using AspnetCoreEF6Example.Models;
+using AspnetCoreEF6Example.Repositories;
 using AutoMapper;
-using Ef6Example.Models;
-using Ef6Example.Repositories;
-using Microsoft.AspNet.Mvc;
-using Microsoft.AspNet.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc;
 
-namespace Ef6Example.Controllers
+namespace AspnetCoreEF6Example.Controllers
 {
     [Route("api/[controller]")]
-    public class MyModelController
+    public class MyModelController : Controller
     {
         private readonly IExampleRepository _exampleRepository;
 
@@ -27,13 +24,12 @@ namespace Ef6Example.Controllers
         {
             try
             {
-                List<MyModel> MyModels = _exampleRepository.GetAll().ToList();
-                return new JsonResult(MyModels.Select(x => Mapper.Map<MyModelViewModel>(x)));
+                return Ok(_exampleRepository.GetAll().Select(x => Mapper.Map<MyModelViewModel>(x)));
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                //Do something with the exception
-                return new HttpStatusCodeResult((int)HttpStatusCode.InternalServerError);
+                //logg exception or do anything with it
+                return StatusCode((int)HttpStatusCode.InternalServerError);
             }
         }
 
@@ -43,19 +39,19 @@ namespace Ef6Example.Controllers
         {
             try
             {
-                MyModel MyModel = _exampleRepository.GetSingleById(id);
+                MyModel myModel = _exampleRepository.GetSingle(id);
 
-                if (MyModel == null)
+                if (myModel == null)
                 {
-                    return new HttpNotFoundResult();
+                    return NotFound();
                 }
 
-                return new HttpOkObjectResult(Mapper.Map<MyModelViewModel>(MyModel));
+                return Ok(Mapper.Map<MyModelViewModel>(myModel));
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
                 //Do something with the exception
-                return new HttpStatusCodeResult((int)HttpStatusCode.InternalServerError);
+                return StatusCode((int)HttpStatusCode.InternalServerError);
             }
         }
 
@@ -67,7 +63,12 @@ namespace Ef6Example.Controllers
             {
                 if (viewModel == null)
                 {
-                    return new BadRequestResult();
+                    return BadRequest();
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
                 }
 
                 MyModel item = Mapper.Map<MyModel>(viewModel);
@@ -77,15 +78,15 @@ namespace Ef6Example.Controllers
 
                 if (save > 0)
                 {
-                    return new CreatedAtRouteResult("GetSingle", new { controller = "MyModel", id = item.Id }, item);
+                    return CreatedAtRoute("GetSingle", new { controller = "MyModel", id = item.Id }, item);
                 }
 
-                return new BadRequestResult();
+                return BadRequest();
             }
             catch (Exception exception)
             {
                 //Do something with the exception
-                return new HttpStatusCodeResult((int)HttpStatusCode.InternalServerError);
+                return StatusCode((int)HttpStatusCode.InternalServerError);
             }
         }
 
@@ -97,14 +98,19 @@ namespace Ef6Example.Controllers
             {
                 if (viewModel == null)
                 {
-                    return new BadRequestResult();
+                    return BadRequest();
                 }
 
-                MyModel singleById = _exampleRepository.GetSingleById(id);
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                MyModel singleById = _exampleRepository.GetSingle(id);
 
                 if (singleById == null)
                 {
-                    return new HttpNotFoundResult();
+                    return NotFound();
                 }
 
                 singleById.Name = viewModel.Name;
@@ -114,15 +120,15 @@ namespace Ef6Example.Controllers
 
                 if (save > 0)
                 {
-                    return new HttpOkObjectResult(Mapper.Map<MyModelViewModel>(singleById));
+                    return Ok(Mapper.Map<MyModelViewModel>(singleById));
                 }
 
-                return new BadRequestResult();
+                return BadRequest();
             }
             catch (Exception exception)
             {
                 //Do something with the exception
-                return new HttpStatusCodeResult((int)HttpStatusCode.InternalServerError);
+                return StatusCode((int)HttpStatusCode.InternalServerError);
             }
         }
 
@@ -132,27 +138,27 @@ namespace Ef6Example.Controllers
         {
             try
             {
-                MyModel singleById = _exampleRepository.GetSingleById(id);
+                MyModel singleById = _exampleRepository.GetSingle(id);
 
                 if (singleById == null)
                 {
-                    return new HttpNotFoundResult();
+                    return NotFound();
                 }
 
-                _exampleRepository.Delete(id);
+                _exampleRepository.Delete(singleById);
                 int save = _exampleRepository.Save();
 
                 if (save > 0)
                 {
-                    return new NoContentResult();
+                    return NoContent();
                 }
 
-                return new BadRequestResult();
+                return BadRequest();
             }
             catch (Exception exception)
             {
                 //Do something with the exception
-                return new HttpStatusCodeResult((int)HttpStatusCode.InternalServerError);
+                return StatusCode((int)HttpStatusCode.InternalServerError);
             }
         }
     }
