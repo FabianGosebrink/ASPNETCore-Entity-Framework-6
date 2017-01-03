@@ -1,4 +1,4 @@
-# ASP.NET Core 1.0 with Entity Framework 6
+# ASP.NET Core with Entity Framework 6
 
 This is an example repository using ASP.NET Core WebAPI and Entity Framework 6. We are implementing custom repositories with a controller having the CRUD functionality.
 
